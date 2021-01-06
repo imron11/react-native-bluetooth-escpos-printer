@@ -1,4 +1,3 @@
-
 package cn.jystudio.bluetooth;
 
 import android.bluetooth.BluetoothAdapter;
@@ -29,7 +28,7 @@ public class BluetoothService {
     //UUID must be this
     // Unique UUID for this application
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-
+    
     // Member fields
     private BluetoothAdapter mAdapter;
 
@@ -38,7 +37,7 @@ public class BluetoothService {
 
     // Constants that indicate the current connection state
     public static final int STATE_NONE = 0;       // we're doing nothing
-    // public static final int STATE_LISTEN = 1;     // now listening for incoming connections //feathure removed.
+   // public static final int STATE_LISTEN = 1;     // now listening for incoming connections //feathure removed.
     public static final int STATE_CONNECTING = 2; // now initiating an outgoing connection
     public static final int STATE_CONNECTED = 3;  // now connected to a remote device
 
@@ -58,7 +57,6 @@ public class BluetoothService {
     public static String ErrorMessage = "No_Error_Message";
 
     private static List<BluetoothServiceStateObserver> observers = new ArrayList<BluetoothServiceStateObserver>();
-    private String mLastConnectedDeviceAddress = "";
 
     /**
      * Constructor. Prepares a new BTPrinter session.
@@ -89,15 +87,14 @@ public class BluetoothService {
         mState = state;
         infoObervers(state, bundle);
     }
-
-    private String getStateName(int state) {
-        String name = "UNKNOW:" + state;
-        if (STATE_NONE == state) {
-            name = "STATE_NONE";
-        } else if (STATE_CONNECTED == state) {
-            name = "STATE_CONNECTED";
-        } else if (STATE_CONNECTING == state) {
-            name = "STATE_CONNECTING";
+    private String getStateName(int state){
+        String name="UNKNOW:" + state;
+        if(STATE_NONE == state){
+            name="STATE_NONE";
+        }else if(STATE_CONNECTED == state){
+            name="STATE_CONNECTED";
+        }else if(STATE_CONNECTING ==  state){
+            name="STATE_CONNECTING";
         }
         return name;
     }
@@ -111,7 +108,6 @@ public class BluetoothService {
     /**
      * Return the current connection state.
      */
-    //todo: get the method in react to check the current connection state
     public synchronized int getState() {
         return mState;
     }
@@ -125,16 +121,16 @@ public class BluetoothService {
     public synchronized void connect(BluetoothDevice device) {
         if (DEBUG) Log.d(TAG, "connect to: " + device);
         BluetoothDevice connectedDevice = null;
-        if (mConnectedThread != null) {
+        if(mConnectedThread!=null){
             connectedDevice = mConnectedThread.bluetoothDevice();
         }
-        if (mState == STATE_CONNECTED && connectedDevice != null && connectedDevice.getAddress().equals(device.getAddress())) {
+        if( mState==STATE_CONNECTED && connectedDevice!=null && connectedDevice.getAddress().equals(device.getAddress())){
             // connected already
             Map<String, Object> bundle = new HashMap<String, Object>();
             bundle.put(DEVICE_NAME, device.getName());
-            bundle.put(DEVICE_ADDRESS, device.getAddress());
+            bundle.put(DEVICE_ADDRESS,device.getAddress());
             setState(STATE_CONNECTED, bundle);
-        } else {
+        }else {
             // Cancel any thread currently running a connection
             this.stop();
             // Start the thread to manage the connection and perform transmissions
@@ -193,13 +189,12 @@ public class BluetoothService {
      */
     private class ConnectedThread extends Thread {
         private final BluetoothDevice mmDevice;
-        private BluetoothSocket mmSocket;
-        private InputStream mmInStream;
-        private OutputStream mmOutStream;
+        private  BluetoothSocket mmSocket;
+        private  InputStream mmInStream;
+        private  OutputStream mmOutStream;
 
         public ConnectedThread(BluetoothDevice device) {
             mmDevice = device;
-            device.getAddress();
         }
 
         @Override
@@ -214,21 +209,22 @@ public class BluetoothService {
             BluetoothSocket tmp = null;
 
             // try to connect with socket inner method firstly.
-            for (int i = 1; i <= 3; i++) {
-                try {
-                    tmp = (BluetoothSocket) mmDevice.getClass().getMethod("createRfcommSocket", int.class).invoke(mmDevice, i);
-                } catch (Exception e) {
-                }
-                if (tmp != null) {
-                    mmSocket = tmp;
-                    break;
-                }
-            }
+            // for(int i=1;i<=3;i++) {
+            //     try {
+            //         tmp = (BluetoothSocket) mmDevice.getClass().getMethod("createRfcommSocket", int.class).invoke(mmDevice, i);
+            //     } catch (Exception e) {
+            //     }
+            //     if(tmp!=null){
+            //         mmSocket = tmp;
+            //         break;
+            //     }
+            // }
 
             // try with given uuid
-            if (mmSocket == null) {
+            if(mmSocket == null) {
                 try {
-                    tmp = mmDevice.createRfcommSocketToServiceRecord(MY_UUID);
+                    Log.d(TAG, "masuk");
+                    tmp = mmDevice.createInsecureRfcommSocketToServiceRecord(MY_UUID);
                 } catch (IOException e) {
                     e.printStackTrace();
                     Log.e(TAG, "create() failed", e);
@@ -245,7 +241,10 @@ public class BluetoothService {
             try {
                 // This is a blocking call and will only return on a
                 // successful connection or an exception
-                mmSocket.connect();
+                if (!mmSocket.isConnected()) {
+                    mmSocket.connect();
+                }
+          
             } catch (Exception e) {
                 e.printStackTrace();
                 connectionFailed();
@@ -275,14 +274,11 @@ public class BluetoothService {
             mmOutStream = tmpOut;
 
             bundle.put(DEVICE_NAME, mmDevice.getName());
-            bundle.put(DEVICE_ADDRESS, mmDevice.getAddress());
+            bundle.put(DEVICE_ADDRESS,mmDevice.getAddress());
             setState(STATE_CONNECTED, bundle);
 
             Log.i(TAG, "Connected");
             int bytes;
-
-            //keep the address of last connected device and get this address directly in the .js code
-            mLastConnectedDeviceAddress = mmDevice.getAddress();
 
             // Keep listening to the InputStream while connected
             while (true) {
@@ -332,10 +328,10 @@ public class BluetoothService {
             }
         }
 
-        public BluetoothDevice bluetoothDevice() {
-            if (mmSocket != null && mmSocket.isConnected()) {
+        public BluetoothDevice bluetoothDevice(){
+            if(mmSocket!=null && mmSocket.isConnected()){
                 return mmSocket.getRemoteDevice();
-            } else {
+            }else{
                 return null;
             }
         }
@@ -348,11 +344,5 @@ public class BluetoothService {
                 Log.e(TAG, "close() of connect socket failed", e);
             }
         }
-    }
-
-
-    //Method to get the address of the last connected device
-    public String getLastConnectedDeviceAddress() {
-        return mLastConnectedDeviceAddress;
     }
 }

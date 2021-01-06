@@ -341,12 +341,11 @@ public class RNBluetoothEscposPrinterModule extends ReactContextBaseJavaModule
              * Returns: byte[]
              */
             byte[] data = PrintPicture.POS_PrintBMP(mBitmap, width, nMode, leftPadding);
-            //  SendDataByte(buffer);
+            //	SendDataByte(buffer);
             sendDataByte(Command.ESC_Init);
             sendDataByte(Command.LF);
             sendDataByte(data);
             sendDataByte(PrinterCommand.POS_Set_PrtAndFeedPaper(30));
-            sendDataByte(PrinterCommand.POS_Set_Cut(1));
             sendDataByte(PrinterCommand.POS_Set_PrtInit());
         }
     }
@@ -428,34 +427,28 @@ public class RNBluetoothEscposPrinterModule extends ReactContextBaseJavaModule
     }
 
     @ReactMethod
-    public void printBarCode(String str, int nType, int nWidthX, int nHeight,
-                             int nHriFontType, int nHriFontPosition) {
+    public void printBarCode(String str, int nType, int nWidthX, int nHeight, int nHriFontType, int nHriFontPosition) {
         byte[] command = PrinterCommand.getBarCodeCommand(str, nType, nWidthX, nHeight, nHriFontType, nHriFontPosition);
         sendDataByte(command);
     }
 
     @ReactMethod
-    public void openDrawer(int nMode, int nTime1, int nTime2) {
-        try{
-            byte[] command = PrinterCommand.POS_Set_Cashbox(nMode, nTime1, nTime2);
-            sendDataByte(command);
-
-         }catch (Exception e){
-            Log.d(TAG, e.getMessage());
+    public void cutPaper(int line, final Promise promise) {
+        if(sendDataByte(PrinterCommand.POS_Set_Cut(line))){
+            promise.resolve(null);
+        } else {
+            promise.reject("COMMAND_NOT_SEND");
         }
     }
 
-
     @ReactMethod
-    public void cutOnePoint() {
-        try{
-            byte[] command = PrinterCommand.POS_Cut_One_Point();
-            sendDataByte(command);
-
-         }catch (Exception e){
-            Log.d(TAG, e.getMessage());
+    public void openCashDrawer(int nMode, int nTime1, int nTime2, final Promise promise) {
+        if(sendDataByte(PrinterCommand.POS_Set_Cashbox(nMode, nTime1, nTime2))){
+            promise.resolve(null);
+        }else{
+            promise.reject("COMMAND_NOT_SEND");
         }
-    }    
+    }
 
     private boolean sendDataByte(byte[] data) {
         if (data==null || mService.getState() != BluetoothService.STATE_CONNECTED) {
