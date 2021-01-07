@@ -477,7 +477,7 @@ RCT_EXPORT_METHOD(printPic:(NSString *) base64encodeStr withOptions:(NSDictionar
     if(RNBluetoothManager.isConnected){
         @try{
             NSInteger nWidth = [[options valueForKey:@"width"] integerValue];
-            if(!nWidth) nWidth = _deviceWidth;
+            if(!nWidth) nWidth = 210;
             //TODO:need to handel param "left" in the options.
             NSInteger paddingLeft = [[options valueForKey:@"left"] integerValue];
             if(!paddingLeft) paddingLeft = 0;
@@ -488,8 +488,11 @@ RCT_EXPORT_METHOD(printPic:(NSString *) base64encodeStr withOptions:(NSDictionar
             //mBitmap.getHeight() * width / mBitmap.getWidth();
             NSInteger imgHeight = jpgImage.size.height;
             NSInteger imagWidth = jpgImage.size.width;
-            NSInteger width = nWidth;//((int)(((nWidth*0.86)+7)/8))*8-7;
-            CGSize size = CGSizeMake(width, imgHeight*width/imagWidth);
+            NSInteger width = ((nWidth + 7) / 8) * 8;
+            NSInteger height = (width*imgHeight)/imagWidth;
+            height = ((nWidth + 7) / 8) * 8;
+            
+            CGSize size = CGSizeMake(width, height);
             UIImage *scaled = [ImageUtils imageWithImage:jpgImage scaledToFillSize:size];
             if(paddingLeft>0){
                 scaled = [ImageUtils imagePadLeft:paddingLeft withSource:scaled];
@@ -592,7 +595,30 @@ RCT_EXPORT_METHOD(printBarCode:(NSString *) str withType:(NSInteger)
     pendingResolve = resolve;
     [RNBluetoothManager writeValue:toPrint withDelegate:self];
 }
-//  L:1,
+
+RCT_EXPORT_METHOD(openDrawer:(NSString *) str
+    mode1:(NSInteger) nMode1
+    mode2:(NSInteger) nMode2
+    mode3:(NSInteger) nMode3
+    mode4:(NSInteger) nMode4
+    mode5:(NSInteger) nMode5
+    andResolver:(RCTPromiseResolveBlock) resolve
+    rejecter:(RCTPromiseRejectBlock) reject)
+{
+    NSMutableData *toPrint = [[NSMutableData alloc] init];
+    int8_t * command = malloc(5);
+        command[0] = nMode1;
+        command[1] = nMode2;
+        command[2] = nMode3;
+        command[3] = nMode4;
+        command[4] = nMode5;
+    [toPrint appendBytes:command length:5];
+    pendingReject = reject;
+    pendingResolve = resolve;
+    [RNBluetoothManager writeValue:toPrint withDelegate:self];
+}
+
+//L:1,
 //M:0,
 //Q:3,
 //H:2
