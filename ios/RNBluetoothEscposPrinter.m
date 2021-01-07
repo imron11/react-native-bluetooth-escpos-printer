@@ -489,8 +489,8 @@ RCT_EXPORT_METHOD(printPic:(NSString *) base64encodeStr withOptions:(NSDictionar
             NSInteger imgHeight = jpgImage.size.height;
             NSInteger imagWidth = jpgImage.size.width;
             NSInteger width = ((nWidth + 7) / 8) * 8;
-            NSInteger height = (width*imgHeight)/imagWidth;
-            height = ((nWidth + 7) / 8) * 8;
+            NSInteger height = width*imgHeight/imagWidth;
+            height = ((height + 7) / 8) * 8;
             
             CGSize size = CGSizeMake(width, height);
             UIImage *scaled = [ImageUtils imageWithImage:jpgImage scaledToFillSize:size];
