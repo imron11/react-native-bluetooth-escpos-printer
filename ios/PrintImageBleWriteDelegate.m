@@ -33,8 +33,7 @@
             [self print];
         }
     }else if(_pendingReject){
-        _pendingReject(@"PRINT_IMAGE_FAILED",@"PRINT_IMAGE_FAILED",nil);
-        _pendingReject = nil;
+        _pendingResolve(nil); _pendingResolve=nil;
     }
     
 }

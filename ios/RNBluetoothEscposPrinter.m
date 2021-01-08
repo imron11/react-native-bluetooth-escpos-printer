@@ -489,15 +489,21 @@ RCT_EXPORT_METHOD(printPic:(NSString *) base64encodeStr withOptions:(NSDictionar
             NSInteger imgHeight = jpgImage.size.height;
             NSInteger imagWidth = jpgImage.size.width;
             NSInteger width = ((nWidth + 7) / 8) * 8;
-            NSInteger height = width*imgHeight/imagWidth;
-            height = ((height + 7) / 8) * 8;
+            NSInteger nHeight = (width*imgHeight)/imagWidth;
+            NSInteger height = ((nHeight + 7) / 8) * 8;
             
+            // CGSize size = CGSizeMake(width, height);
+            // UIImage *scaled = [ImageUtils imageWithImage:jpgImage scaledToFillSize:size];
+            // if(paddingLeft>0){
+            //     scaled = [ImageUtils imagePadLeft:paddingLeft withSource:scaled];
+            //     size =[scaled size];
+            // }
+
             CGSize size = CGSizeMake(width, height);
-            UIImage *scaled = [ImageUtils imageWithImage:jpgImage scaledToFillSize:size];
-            if(paddingLeft>0){
-                scaled = [ImageUtils imagePadLeft:paddingLeft withSource:scaled];
-                size =[scaled size];
-            }
+            UIGraphicsBeginImageContext(size);
+            [jpgImage drawInRect:CGRectMake(0, 0, size.width, size.height)];
+            UIImage *scaled = UIGraphicsGetImageFromCurrentImageContext();
+            UIGraphicsEndImageContext();
             
             unsigned char * graImage = [ImageUtils imageToGreyImage:scaled];
             unsigned char * formatedData = [ImageUtils format_K_threshold:graImage width:size.width height:size.height];
@@ -512,7 +518,7 @@ RCT_EXPORT_METHOD(printPic:(NSString *) base64encodeStr withOptions:(NSDictionar
         }
         @catch(NSException *e){
             NSLog(@"ERROR IN PRINTING IMG: %@",[e callStackSymbols]);
-              reject(@"COMMAND_NOT_SEND",@"COMMAND_NOT_SEND",nil);
+              reject([e callStackSymbols],[e callStackSymbols],nil);
         }
     }else{
         reject(@"COMMAND_NOT_SEND",@"COMMAND_NOT_SEND",nil);
